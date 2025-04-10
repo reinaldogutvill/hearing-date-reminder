@@ -1,47 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Immigration Court Hearing Reminder App
 
-## Getting Started
+A bilingual, accessible web app to help immigrants in removal proceedings receive timely court hearing reminders via email. Built with **Next.js**, **MongoDB**, and **SendGrid**, this app is designed for use through pro bono services, community orgs, and directly by individuals facing immigration court dates. In a practical setting, the respondent in question would be notified and integrated to the reminder system after they have received their hearing date in court.
 
-First, run the development server:
+This project was built by an individual named Reinaldo with the support of AI-assisted development using OpenAI’s ChatGPT.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+All core design, direction, and social-legal context were created by a human. ChatGPT was used as a development assistant — helping to implement features, debug errors, and accelerate technical learning during development.
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+**Multilingual Support**: English and Spanish  
+**Email Reminders**: Sends confirmation email upon hearing date submission  
+**Date Awareness**: Formats court dates in human-readable language  
+**Court-Specific Guidance**: Includes EOIR hotline and disclaimer  
+**Secure Data Storage**: MongoDB Atlas integration  
+**Open Source**: Customizable for clinics or pro bono services
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+---
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+## The Purpose Behind This Project
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Immigrants in removal proceedings often struggle to track court dates — especially with paper-only notifications. This app is:
 
-## Learn More
+- Lightweight and easy to use at court or clinics
+- Notifies individuals with clear, actionable info
+- Designed to support trust, not replace legal advice
 
-To learn more about Next.js, take a look at the following resources:
+>Includes a disclaimer and reminder to confirm court dates via EOIR hotline.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tech Stack
 
-## Deploy on Vercel
+- **Frontend**: Next.js / React
+- **Backend**: API Routes (Node.js)
+- **Database**: MongoDB Atlas
+- **Email Service**: SendGrid
+- **Deployment**: Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
-# hearing-date-reminder
-# hearing-date-reminder
-# hearing-date-reminder
-# hearing-date-reminder
-# hearing-date-reminder
-# hearing-date-reminder
-# hearing-date-reminder
+## Live Demo
+
+🔗 [https://hearing-date-reminder.vercel.app](https://hearing-date-reminder.vercel.app)
+
+---
+
+## Environment Variables
+
+To run locally, create a `.env.local` file with:
+
+```env
+SENDGRID_API_KEY=your_sendgrid_api_key
+MONGODB_URI=your_mongodb_connection_string
