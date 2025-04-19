@@ -1,4 +1,3 @@
-
 import dbConnect from "@/lib/mongodb";
 import Reminder from "@/models/Reminder";
 import sgMail from "@sendgrid/mail";
@@ -11,18 +10,27 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log("🔌 Connecting to database...");
     await dbConnect();
 
     const today = new Date();
     const tenDaysLater = new Date(today);
     tenDaysLater.setDate(today.getDate() + 10);
 
-    // Normalize to YYYY-MM-DD for comparison
-    const isoTargetDate = tenDaysLater.toISOString().split("T")[0];
+    // Define the start and end of that day
+    const startOfDay = new Date(tenDaysLater.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(tenDaysLater.setHours(23, 59, 59, 999));
+
+    console.log("📅 Searching for hearings on:", startOfDay.toISOString());
 
     const reminders = await Reminder.find({
-      hearingDate: { $regex: `^${isoTargetDate}` },
+      hearingDate: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
     });
+
+    console.log(`📨 Found ${reminders.length} reminder(s) to send.`);
 
     for (const reminder of reminders) {
       const { name, email, hearingDate } = reminder;
@@ -45,12 +53,18 @@ Wishing you all the best,
 – Immigration Court Reminder Tool`,
       };
 
+      console.log(`📬 Sending reminder to ${email}`);
       await sgMail.send(msg);
     }
 
     res.status(200).json({ message: `Sent ${reminders.length} reminders.` });
   } catch (error) {
-    console.error("Error sending 10-day reminders:", error);
-    res.status(500).json({ message: "Something went wrong." });
+    console.error("❌ Error:", JSON.stringify(error, null, 2));
+    res.status(500).json({
+      message: "Something went wrong.",
+      name: error.name,
+      error: error.message,
+      stack: error.stack,
+    });
   }
 }
