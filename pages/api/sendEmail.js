@@ -53,7 +53,7 @@ Please note: Immigration court dates can change without notice. This reminder is
 
   try {
     await dbConnect();
-    await Reminder.create({ name, aNumber, hearingDate, email });
+    await Reminder.create({ name, aNumber, hearingDate, email, monthsReminded: [] });
     await sgMail.send(msg);
 
     res.status(200).json({ message: "Email sent and saved successfully!" });
