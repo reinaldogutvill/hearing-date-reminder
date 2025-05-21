@@ -20,16 +20,17 @@ export default async function handler(req, res) {
     oneMonthFromNow.setHours(0, 0, 0, 0);
     sixMonthsFromNow.setHours(23, 59, 59, 999);
 
-    // ------------------ Monthly Reminder Block ------------------
+    // --------- Monthly Reminders ---------
     const monthlyReminders = await Reminder.find({
       hearingDate: {
         $gte: oneMonthFromNow,
         $lte: sixMonthsFromNow,
       },
+      reminderSent: { $ne: true },
     });
 
     for (const reminder of monthlyReminders) {
-      const { name, email, hearingDate } = reminder;
+      const { name, email, hearingDate, updateToken } = reminder;
       const hearing = new Date(hearingDate);
       hearing.setHours(0, 0, 0, 0);
       today.setHours(0, 0, 0, 0);
@@ -50,13 +51,16 @@ export default async function handler(req, res) {
           to: email,
           from: "reinaldogutvill@gmail.com",
           subject: `Reminder: ${monthsLeft} month(s) until your immigration hearing`,
-          text: `Hi ${name}, just a reminder that your immigration court hearing is in ${monthsLeft} month(s), scheduled for ${formattedDate}.
+          text: `Hi ${name}, your immigration hearing is in ${monthsLeft} month(s), scheduled for ${formattedDate}.
 
-Double-check your hearing date:
+Check your hearing date:
 EOIR Hotline: 1-800-898-7180  
-Or visit: https://acis.eoir.justice.gov/
+Online: https://acis.eoir.justice.gov/
 
-— Immigration Court Hearing Reminder Tool`,
+Unsubscribe: ${process.env.NEXT_PUBLIC_BASE_URL}/unsubscribe?token=${updateToken}  
+Update hearing date: ${process.env.NEXT_PUBLIC_BASE_URL}/update-hearing?token=${updateToken}
+
+— Immigration Court Reminder Tool`,
         };
 
         await sgMail.send(msg);
@@ -64,7 +68,7 @@ Or visit: https://acis.eoir.justice.gov/
       }
     }
 
-    // ------------------ 7-Day Countdown Block ------------------
+    // --------- 7-Day Countdown Reminders ---------
     const start = new Date(today);
     const end = new Date(today);
     start.setDate(today.getDate() + 1);
@@ -77,10 +81,11 @@ Or visit: https://acis.eoir.justice.gov/
         $gte: start,
         $lte: end,
       },
+      reminderSent: { $ne: true },
     });
 
     for (const reminder of countdownReminders) {
-      const { name, email, hearingDate } = reminder;
+      const { name, email, hearingDate, updateToken } = reminder;
       const formattedDate = new Date(hearingDate).toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
@@ -95,18 +100,22 @@ Or visit: https://acis.eoir.justice.gov/
         subject: `Reminder: ${daysLeft} day(s) until your immigration hearing`,
         text: `Hi ${name}, your hearing is coming up on ${formattedDate} — just ${daysLeft} day(s) away.
 
-Please double-check your hearing date using the EOIR hotline: 1-800-898-7180  
-Or visit: https://acis.eoir.justice.gov/
+Please double-check your hearing date:
+EOIR Hotline: 1-800-898-7180  
+Online: https://acis.eoir.justice.gov/
 
-We'll continue sending you reminders each day until your hearing.
+Unsubscribe: ${process.env.NEXT_PUBLIC_BASE_URL}/unsubscribe?token=${updateToken}  
+Update hearing date: ${process.env.NEXT_PUBLIC_BASE_URL}/update-hearing?token=${updateToken}
 
-— Immigration Court Hearing Reminder Tool`,
+We’ll keep reminding you until the hearing date.
+
+— Immigration Court Reminder Tool`,
       };
 
       await sgMail.send(msg);
       console.log("✅ Sent 7-day countdown reminder to:", email);
 
-      // ✅ Mark as sent if it's the last-day reminder
+      // ✅ Mark as sent if it’s the last reminder
       if (daysLeft === 1) {
         await Reminder.updateOne(
           { _id: reminder._id },
@@ -116,10 +125,10 @@ We'll continue sending you reminders each day until your hearing.
     }
 
     res.status(200).json({
-      message: `Processed ${monthlyReminders.length} monthly and ${countdownReminders.length} 7-day countdown reminders.`,
+      message: `Sent ${monthlyReminders.length} monthly and ${countdownReminders.length} countdown reminders.`,
     });
   } catch (error) {
-    console.error("Error sending reminders:", error);
-    res.status(500).json({ message: "Something went wrong.", error: error.message });
+    console.error("Reminder error:", error);
+    res.status(500).json({ message: "Error sending reminders", error: error.message });
   }
 }

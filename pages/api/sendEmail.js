@@ -1,6 +1,7 @@
 import dbConnect from "@/lib/mongodb";
 import Reminder from "@/models/Reminder";
 import sgMail from "@sendgrid/mail";
+import crypto from "crypto";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -8,6 +9,8 @@ export default async function handler(req, res) {
   }
 
   const { name, email, hearingDate, aNumber, language } = req.body;
+
+  const updateToken = crypto.randomBytes(16).toString("hex"); // ✅ generate token
 
   const formattedDate = new Date(hearingDate).toLocaleDateString(
     language === "es" ? "es-ES" : "en-US",
@@ -17,6 +20,10 @@ export default async function handler(req, res) {
       day: "numeric",
     }
   );
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  const unsubscribeLink = `${baseUrl}/unsubscribe?token=${updateToken}`;
+  const updateLink = `${baseUrl}/update-hearing?token=${updateToken}`;
 
   const subject =
     language === "es"
@@ -29,16 +36,22 @@ export default async function handler(req, res) {
 
 Tenga en cuenta que las fechas de audiencia pueden cambiar sin previo aviso. Este recordatorio es solo un apoyo personal, no un aviso oficial del tribunal.
 
-  - Llame a la línea automatizada de EOIR: 1-800-898-7180  
-  - Verifica su caso en línea: https://acis.eoir.justice.gov/
+- Llame a la línea automatizada de EOIR: 1-800-898-7180  
+- Verifica su caso en línea: https://acis.eoir.justice.gov/
+
+¿Desea dejar de recibir recordatorios? Cancele aquí: ${unsubscribeLink}  
+¿Necesita cambiar su fecha de audiencia? Hágalo aquí: ${updateLink}
 
 – Recordatorios de Audiencias de Inmigración`
       : `Hi ${name}, your hearing is set for ${formattedDate}. We will send more reminders in the future until your hearing date arrives.
 
 Please note: Immigration court dates can change without notice. This reminder is provided as a personal aid, but it is not an official court notice.
 
-  - Call the EOIR Automated Hotline to confirm: 1-800-898-7180  
-  - Or check your case online: https://acis.eoir.justice.gov/
+- Call the EOIR Automated Hotline to confirm: 1-800-898-7180  
+- Or check your case online: https://acis.eoir.justice.gov/
+
+Want to stop these reminders? Unsubscribe here: ${unsubscribeLink}  
+Need to update your hearing date? Do it here: ${updateLink}
 
 – Immigration Court Hearing Reminders`;
 
@@ -53,7 +66,17 @@ Please note: Immigration court dates can change without notice. This reminder is
 
   try {
     await dbConnect();
-    await Reminder.create({ name, aNumber, hearingDate, email, monthsReminded: [] });
+
+    // ✅ Save the reminder with the token
+    await Reminder.create({
+      name,
+      aNumber,
+      hearingDate,
+      email,
+      monthsReminded: [],
+      updateToken,
+    });
+
     await sgMail.send(msg);
 
     res.status(200).json({ message: "Email sent and saved successfully!" });
