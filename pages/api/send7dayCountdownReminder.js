@@ -30,7 +30,8 @@ export default async function handler(req, res) {
     });
 
     for (const reminder of monthlyReminders) {
-      const { name, email, hearingDate, updateToken } = reminder;
+      const { name, email, hearingDate, updateToken, language = "en" } = reminder;
+
       const hearing = new Date(hearingDate);
       hearing.setHours(0, 0, 0, 0);
       today.setHours(0, 0, 0, 0);
@@ -41,30 +42,55 @@ export default async function handler(req, res) {
         12 * (hearing.getFullYear() - today.getFullYear());
 
       if (monthsLeft > 0 && today.getDate() === hearing.getDate()) {
-        const formattedDate = hearing.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
+        const formattedDate = hearing.toLocaleDateString(
+          language === "es" ? "es-ES" : "en-US",
+          {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }
+        );
+
+        const unsubscribeLink = `${process.env.NEXT_PUBLIC_BASE_URL}/unsubscribe?token=${updateToken}`;
+        const updateLink = `${process.env.NEXT_PUBLIC_BASE_URL}/update-hearing?token=${updateToken}`;
+
+        const subject =
+          language === "es"
+            ? `Recordatorio: ${monthsLeft} mes(es) hasta su audiencia`
+            : `Reminder: ${monthsLeft} month(s) until your immigration hearing`;
+
+        const text =
+          language === "es"
+            ? `Hola ${name}, su audiencia está programada para el ${formattedDate}. Faltan ${monthsLeft} mes(es).
+
+Verifique su fecha:
+- Llame a EOIR: 1-800-898-7180  
+- En línea: https://acis.eoir.justice.gov/
+
+Cancelar recordatorios: ${unsubscribeLink}  
+Actualizar fecha de audiencia: ${updateLink}
+
+– Recordatorios de Audiencias de Inmigración`
+            : `Hi ${name}, your immigration hearing is in ${monthsLeft} month(s), scheduled for ${formattedDate}.
+
+Check your hearing date:
+- EOIR Hotline: 1-800-898-7180  
+- Online: https://acis.eoir.justice.gov/
+
+Unsubscribe: ${unsubscribeLink}  
+Update hearing date: ${updateLink}
+
+— Immigration Court Reminder Tool`;
 
         const msg = {
           to: email,
           from: "reinaldogutvill@gmail.com",
-          subject: `Reminder: ${monthsLeft} month(s) until your immigration hearing`,
-          text: `Hi ${name}, your immigration hearing is in ${monthsLeft} month(s), scheduled for ${formattedDate}.
-
-Check your hearing date:
-EOIR Hotline: 1-800-898-7180  
-Online: https://acis.eoir.justice.gov/
-
-Unsubscribe: ${process.env.NEXT_PUBLIC_BASE_URL}/unsubscribe?token=${updateToken}  
-Update hearing date: ${process.env.NEXT_PUBLIC_BASE_URL}/update-hearing?token=${updateToken}
-
-— Immigration Court Reminder Tool`,
+          subject,
+          text,
         };
 
         await sgMail.send(msg);
-        console.log("✅ Sent monthly reminder to:", email);
+        console.log(`✅ Sent ${language === "es" ? "ES" : "EN"} monthly reminder to:`, email);
       }
     }
 
@@ -85,37 +111,61 @@ Update hearing date: ${process.env.NEXT_PUBLIC_BASE_URL}/update-hearing?token=${
     });
 
     for (const reminder of countdownReminders) {
-      const { name, email, hearingDate, updateToken } = reminder;
-      const formattedDate = new Date(hearingDate).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
+      const { name, email, hearingDate, updateToken, language = "en" } = reminder;
 
-      const daysLeft = Math.ceil((new Date(hearingDate) - today) / (1000 * 60 * 60 * 24));
+      const formattedDate = new Date(hearingDate).toLocaleDateString(
+        language === "es" ? "es-ES" : "en-US",
+        {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }
+      );
 
-      const msg = {
-        to: email,
-        from: "reinaldogutvill@gmail.com",
-        subject: `Reminder: ${daysLeft} day(s) until your immigration hearing`,
-        text: `Hi ${name}, your hearing is coming up on ${formattedDate} — just ${daysLeft} day(s) away.
+      const daysLeft = Math.ceil(
+        (new Date(hearingDate) - today) / (1000 * 60 * 60 * 24)
+      );
+
+      const unsubscribeLink = `${process.env.NEXT_PUBLIC_BASE_URL}/unsubscribe?token=${updateToken}`;
+      const updateLink = `${process.env.NEXT_PUBLIC_BASE_URL}/update-hearing?token=${updateToken}`;
+
+      const subject =
+        language === "es"
+          ? `Recordatorio: Quedan ${daysLeft} día(s) para su audiencia`
+          : `Reminder: ${daysLeft} day(s) until your hearing`;
+
+      const text =
+        language === "es"
+          ? `Hola ${name}, su audiencia está programada para el ${formattedDate} — faltan ${daysLeft} día(s).
+
+Verifique su fecha llamando a EOIR: 1-800-898-7180  
+O en línea: https://acis.eoir.justice.gov/
+
+Para cancelar los recordatorios: ${unsubscribeLink}  
+Para actualizar la fecha: ${updateLink}
+
+– Recordatorio de Audiencias de Inmigración`
+          : `Hi ${name}, your hearing is coming up on ${formattedDate} — just ${daysLeft} day(s) away.
 
 Please double-check your hearing date:
 EOIR Hotline: 1-800-898-7180  
 Online: https://acis.eoir.justice.gov/
 
-Unsubscribe: ${process.env.NEXT_PUBLIC_BASE_URL}/unsubscribe?token=${updateToken}  
-Update hearing date: ${process.env.NEXT_PUBLIC_BASE_URL}/update-hearing?token=${updateToken}
+Unsubscribe: ${unsubscribeLink}  
+Update hearing date: ${updateLink}
 
-We’ll keep reminding you until the hearing date.
+— Immigration Court Hearing Reminder Tool`;
 
-— Immigration Court Reminder Tool`,
+      const msg = {
+        to: email,
+        from: "reinaldogutvill@gmail.com",
+        subject,
+        text,
       };
 
       await sgMail.send(msg);
-      console.log("✅ Sent 7-day countdown reminder to:", email);
+      console.log(`✅ Sent ${language === "es" ? "ES" : "EN"} countdown reminder to:`, email);
 
-      // ✅ Mark as sent if it’s the last reminder
       if (daysLeft === 1) {
         await Reminder.updateOne(
           { _id: reminder._id },

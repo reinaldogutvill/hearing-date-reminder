@@ -1,6 +1,6 @@
 const { MongoClient } = require("mongodb");
 
-const uri = "***REMOVED***hearingreminderdb.utzp66i.mongodb.net/?retryWrites=true&w=majority&appName=HearingReminderDB";
+const uri = process.env.MONGODB_URI;;
 const dbName = "test"; // or whatever the correct DB name is — could be `test`, `reminders`, or something you’ve used
 
 async function run() {
