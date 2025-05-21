@@ -28,8 +28,6 @@ export default async function handler(req, res) {
       },
     });
 
-    console.log("Monthly candidates found:", monthlyReminders.length);
-
     for (const reminder of monthlyReminders) {
       const { name, email, hearingDate } = reminder;
       const hearing = new Date(hearingDate);
@@ -41,9 +39,7 @@ export default async function handler(req, res) {
         today.getMonth() +
         12 * (hearing.getFullYear() - today.getFullYear());
 
-      const isSameDay = today.getDate() === hearing.getDate();
-
-      if (monthsLeft > 0 && isSameDay) {
+      if (monthsLeft > 0 && today.getDate() === hearing.getDate()) {
         const formattedDate = hearing.toLocaleDateString("en-US", {
           year: "numeric",
           month: "long",
@@ -83,8 +79,6 @@ Or visit: https://acis.eoir.justice.gov/
       },
     });
 
-    console.log("7-day countdown candidates found:", countdownReminders.length);
-
     for (const reminder of countdownReminders) {
       const { name, email, hearingDate } = reminder;
       const formattedDate = new Date(hearingDate).toLocaleDateString("en-US", {
@@ -92,6 +86,7 @@ Or visit: https://acis.eoir.justice.gov/
         month: "long",
         day: "numeric",
       });
+
       const daysLeft = Math.ceil((new Date(hearingDate) - today) / (1000 * 60 * 60 * 24));
 
       const msg = {
@@ -110,6 +105,14 @@ We'll continue sending you reminders each day until your hearing.
 
       await sgMail.send(msg);
       console.log("✅ Sent 7-day countdown reminder to:", email);
+
+      // ✅ Mark as sent if it's the last-day reminder
+      if (daysLeft === 1) {
+        await Reminder.updateOne(
+          { _id: reminder._id },
+          { $set: { reminderSent: true } }
+        );
+      }
     }
 
     res.status(200).json({
