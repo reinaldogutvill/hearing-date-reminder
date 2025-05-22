@@ -1,25 +1,26 @@
-import { useEffect, useState } from "react";
+// pages/unsubscribe.jsx
+
+import { useEffect } from "react";
 
 export default function UnsubscribePage() {
-  const [status, setStatus] = useState("Processing...");
-
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("token");
-
     if (!token) {
-      setStatus("Invalid unsubscribe link.");
+      document.body.innerHTML = "<h1>Invalid unsubscribe link.</h1>";
       return;
     }
 
+    // fetch the HTML response and replace the body
     fetch(`/api/unsubscribe?token=${token}`)
-      .then((res) => res.json())
-      .then((data) => setStatus(data.message))
-      .catch(() => setStatus("Something went wrong. Please try again."));
+      .then((res) => res.text())
+      .then((html) => {
+        document.body.innerHTML = html;
+      })
+      .catch(() => {
+        document.body.innerHTML = "<h1>Something went wrong. Please try again.</h1>";
+      });
   }, []);
 
-  return (
-    <div style={{ padding: "2rem", textAlign: "center" }}>
-      <h1>{status}</h1>
-    </div>
-  );
+  // while loading, you can show nothing or a spinner
+  return null;
 }
