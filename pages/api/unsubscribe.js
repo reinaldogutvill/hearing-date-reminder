@@ -9,10 +9,13 @@ export default async function handler(req, res) {
 
   const reminder = await Reminder.findOneAndUpdate(
     { updateToken: token },
-    { isUnsubscribed: true }
-  );
+    { $set: { isUnsubscribed: true } },
+    { new: true }
+  );  
 
-  if (!reminder) return res.status(404).json({ message: "Reminder not found" });
+  if (!reminder) {
+    return res.status(404).json({ message: "Reminder not found" });
+  }
 
   res.status(200).json({ message: "You have been unsubscribed." });
 }

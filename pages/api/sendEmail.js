@@ -73,8 +73,10 @@ Need to update your hearing date? Do it here: ${updateLink}
       aNumber,
       hearingDate,
       email,
+      language,                      // ✅ included
       monthsReminded: [],
       updateToken,
+      isUnsubscribed: false,
     });
 
     await sgMail.send(msg);
