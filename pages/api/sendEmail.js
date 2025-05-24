@@ -40,7 +40,7 @@ Tenga en cuenta que las fechas de audiencia pueden cambiar sin previo aviso. Est
 - Verifica su caso en línea: https://acis.eoir.justice.gov/
 
 ¿Desea dejar de recibir recordatorios? Cancele aquí: ${unsubscribeLink}  
-¿Necesita cambiar su fecha de audiencia? Hágalo aquí: ${updateLink}
+¿Necesita cambiar su fecha de audiencia? Por favor cancela su recordatorio inicial y mande uno nuevo aquí: hearing-date-reminder.vercel.app
 
 – Recordatorios de Audiencias de Inmigración`
       : `Hi ${name}, your hearing is set for ${formattedDate}. We will send more reminders in the future until your hearing date arrives.
@@ -51,7 +51,7 @@ Please note: Immigration court dates can change without notice. This reminder is
 - Or check your case online: https://acis.eoir.justice.gov/
 
 Want to stop these reminders? Unsubscribe here: ${unsubscribeLink}  
-Need to update your hearing date? Do it here: ${updateLink}
+Need to update your hearing date? Please unsubscribe and submit a new form here: hearing-date-reminder.vercel.app
 
 – Immigration Court Hearing Reminders`;
 
