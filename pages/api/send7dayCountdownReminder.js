@@ -2,9 +2,9 @@
 
 import dbConnect from "@/lib/mongodb";
 import Reminder from "@/models/Reminder";
-import sgMail from "@sendgrid/mail";
+import { Resend } from "resend";
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).json({ message: "Only GET allowed" });
@@ -101,12 +101,19 @@ Check your hearing date:
 - Online: https://acis.eoir.justice.gov/
 
 Unsubscribe: ${unsubscribeLink}
-Update hearing date: ${updateLink}
 
 — Immigration Court Reminder Tool`;
 
       // send & update
-      await sgMail.send({ to: r.email, from: "reinaldogutvill@gmail.com", subject, text });
+      const { error } = await resend.emails.send({
+        to: email,
+        from: process.env.RESEND_FROM,
+        subject,
+        text: emailText,
+        html: emailHtml,
+      });
+      if (error) throw error;
+      
       console.log(`✅ Sent ${monthsLeft}‑mo (${lang}) to`, r.email);
 
       await Reminder.updateOne(
@@ -160,11 +167,18 @@ Please double‑check your hearing date:
 - Online: https://acis.eoir.justice.gov/
 
 Unsubscribe: ${unsubscribeLink}
-Update hearing date: ${updateLink}
 
 — Immigration Court Reminder Tool`;
 
-      await sgMail.send({ to: r.email, from: "reinaldogutvill@gmail.com", subject, text });
+const { error } = await resend.emails.send({
+  to: email,
+  from: process.env.RESEND_FROM,
+  subject,
+  text: emailText,
+  html: emailHtml,
+});
+if (error) throw error;
+
       console.log(`✅ Sent ${daysLeft}‑day (${lang}) to`, r.email);
 
       // mark final day so we don’t re‑send next run

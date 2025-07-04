@@ -1,6 +1,6 @@
 import dbConnect from "@/lib/mongodb";
 import Reminder from "@/models/Reminder";
-import sgMail from "@sendgrid/mail";
+import { Resend } from "resend";
 import crypto from "crypto";
 
 export default async function handler(req, res) {
@@ -55,7 +55,7 @@ Need to update your hearing date? Please unsubscribe and submit a new form here:
 
 – Immigration Court Hearing Reminders`;
 
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
   const msg = {
     to: email,
@@ -79,7 +79,18 @@ Need to update your hearing date? Please unsubscribe and submit a new form here:
       isUnsubscribed: false,
     });
 
-    await sgMail.send(msg);
+    const { error } = await resend.emails.send({
+      to: email,
+      from: process.env.RESEND_FROM,  // We'll add this next step
+      subject,
+      text,
+      html,
+    });
+    
+    if (error) {
+      throw error;
+    }
+    
 
     res.status(200).json({ message: "Email sent and saved successfully!" });
   } catch (error) {
