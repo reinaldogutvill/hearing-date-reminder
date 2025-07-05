@@ -1,6 +1,6 @@
 # Immigration Court Hearing Reminder App
 
-A bilingual, accessible web app to help immigrants in removal proceedings receive timely court hearing reminders via email. Built with **Next.js**, **MongoDB**, and **SendGrid**, this app is designed for use through pro bono services, community orgs, and directly by individuals facing immigration court dates. In a practical setting, the respondent in question would be notified and integrated to the reminder system after they have received their hearing date in court.
+A bilingual, accessible web app to help immigrants in removal proceedings receive timely court hearing reminders via email. Built with **Next.js**, **MongoDB**, and **Resend**, this app is designed for use through pro bono services, community orgs, and directly by individuals facing immigration court dates. In a practical setting, the respondent in question would be notified and integrated to the reminder system after they have received their hearing date in court.
 
 This project was built by an individual named Reinaldo with the support of AI-assisted development using OpenAI’s ChatGPT.
 
@@ -35,7 +35,7 @@ Immigrants in removal proceedings often struggle to track court dates — especi
 - **Frontend**: Next.js / React
 - **Backend**: API Routes (Node.js)
 - **Database**: MongoDB Atlas
-- **Email Service**: SendGrid
+- **Email Service**: Resend
 - **Deployment**: Vercel
 
 ---
@@ -46,10 +46,6 @@ Immigrants in removal proceedings often struggle to track court dates — especi
 
 ---
 
-## Environment Variables
+## License
 
-To run locally, create a `.env.local` file with:
-
-```env
-SENDGRID_API_KEY=your_sendgrid_api_key
-MONGODB_URI=your_mongodb_connection_string
+This project is licensed under the [MIT License](./LICENSE) © 2025 Reinaldo Gutierrez-Villegas.
