@@ -92,7 +92,7 @@ Unsubscribe: ${unsubscribeLink}
 
       const { error } = await resend.emails.send({
         to: r.email,
-        from: "reminders@onboarding.resend.dev",
+        from: 'Immigration Court Reminders <onboarding@resend.dev>',
         subject,
         text,
       });
@@ -153,7 +153,7 @@ Unsubscribe: ${unsubscribeLink}
 
       const { error } = await resend.emails.send({
         to: r.email,
-        from: "reminders@onboarding.resend.dev",
+        from: 'Immigration Court Reminders <onboarding@resend.dev>',
         subject,
         text,
       });
