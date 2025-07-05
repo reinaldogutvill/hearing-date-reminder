@@ -92,7 +92,7 @@ Unsubscribe: ${unsubscribeLink}
 
       const { error } = await resend.emails.send({
         to: r.email,
-        from: process.env.RESEND_FROM,
+        from: "reminders@onboarding.resend.dev",
         subject,
         text,
       });
@@ -153,7 +153,7 @@ Unsubscribe: ${unsubscribeLink}
 
       const { error } = await resend.emails.send({
         to: r.email,
-        from: process.env.RESEND_FROM,
+        from: "reminders@onboarding.resend.dev",
         subject,
         text,
       });
