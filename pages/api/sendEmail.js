@@ -1,3 +1,5 @@
+// pages/api/sendEmail.js
+
 import dbConnect from "@/lib/mongodb";
 import Reminder from "@/models/Reminder";
 import { Resend } from "resend";
@@ -9,16 +11,11 @@ export default async function handler(req, res) {
   }
 
   const { name, email, hearingDate, aNumber, language } = req.body;
-
-  const updateToken = crypto.randomBytes(16).toString("hex"); // ✅ generate token
+  const updateToken = crypto.randomBytes(16).toString("hex");
 
   const formattedDate = new Date(hearingDate).toLocaleDateString(
     language === "es" ? "es-ES" : "en-US",
-    {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }
+    { year: "numeric", month: "long", day: "numeric" }
   );
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -40,7 +37,7 @@ Tenga en cuenta que las fechas de audiencia pueden cambiar sin previo aviso. Est
 - Verifica su caso en línea: https://acis.eoir.justice.gov/
 
 ¿Desea dejar de recibir recordatorios? Cancele aquí: ${unsubscribeLink}  
-¿Necesita cambiar su fecha de audiencia? Por favor cancela su recordatorio inicial y mande uno nuevo aquí: hearing-date-reminder.vercel.app
+¿Necesita cambiar su fecha de audiencia? Por favor cancela su recordatorio inicial y mande uno nuevo aquí: ${baseUrl}
 
 – Recordatorios de Audiencias de Inmigración`
       : `Hi ${name}, your hearing is set for ${formattedDate}. We will send more reminders in the future until your hearing date arrives.
@@ -51,29 +48,21 @@ Please note: Immigration court dates can change without notice. This reminder is
 - Or check your case online: https://acis.eoir.justice.gov/
 
 Want to stop these reminders? Unsubscribe here: ${unsubscribeLink}  
-Need to update your hearing date? Please unsubscribe and submit a new form here: hearing-date-reminder.vercel.app
+Need to update your hearing date? Please unsubscribe and submit a new form here: ${baseUrl}
 
 – Immigration Court Hearing Reminders`;
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-  const msg = {
-    to: email,
-    from: "reinaldogutvill@gmail.com",
-    subject,
-    text,
-  };
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
   try {
     await dbConnect();
 
-    // ✅ Save the reminder with the token
     await Reminder.create({
       name,
       aNumber,
       hearingDate,
       email,
-      language,                      // ✅ included
+      language,
       monthsReminded: [],
       updateToken,
       isUnsubscribed: false,
@@ -81,16 +70,12 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
     const { error } = await resend.emails.send({
       to: email,
-      from: process.env.RESEND_FROM,  // We'll add this next step
+      from: process.env.RESEND_FROM,
       subject,
       text,
-      html,
     });
-    
-    if (error) {
-      throw error;
-    }
-    
+
+    if (error) throw error;
 
     res.status(200).json({ message: "Email sent and saved successfully!" });
   } catch (error) {

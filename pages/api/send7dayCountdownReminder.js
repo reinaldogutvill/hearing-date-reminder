@@ -1,5 +1,3 @@
-// pages/api/send7dayCountdownReminder.js
-
 import dbConnect from "@/lib/mongodb";
 import Reminder from "@/models/Reminder";
 import { Resend } from "resend";
@@ -12,7 +10,6 @@ export default async function handler(req, res) {
   try {
     await dbConnect();
 
-    // ─── Setup dates ───────────────────────────────────────────────
     const now = new Date();
     const today = new Date(now.setHours(0, 0, 0, 0));
 
@@ -30,7 +27,6 @@ export default async function handler(req, res) {
     end7.setDate(end7.getDate() + 7);
     end7.setHours(23, 59, 59, 999);
 
-    // ─── Fetch reminders ────────────────────────────────────────────
     const monthlyReminders = await Reminder.find({
       hearingDate: { $gte: oneMonth, $lte: sixMonths },
       isUnsubscribed: false,
@@ -45,7 +41,6 @@ export default async function handler(req, res) {
     let monthlyCount = 0;
     let countdownCount = 0;
 
-    // ─── Monthly reminders (1–6 months out) ────────────────────────
     for (const r of monthlyReminders) {
       const hearing = new Date(r.hearingDate);
       hearing.setHours(0, 0, 0, 0);
@@ -57,17 +52,9 @@ export default async function handler(req, res) {
 
       if (monthsLeft < 1 || monthsLeft > 6) continue;
       if (hearing.getDate() !== today.getDate()) continue;
+      if (r.monthsReminded.includes(monthsLeft)) continue;
 
-      // never repeat the same monthsLeft email
-      if (r.monthsReminded.includes(monthsLeft)) {
-        console.log(`⏭️ Skipping ${monthsLeft}‑mo (already sent) to`, r.email);
-        continue;
-      }
-
-      // determine language (fallback to "en")
       const lang = (r.language && r.language.toLowerCase() === "es") ? "es" : "en";
-
-      // format date & links
       const formattedDate = hearing.toLocaleDateString(
         lang === "es" ? "es-ES" : "en-US",
         { year: "numeric", month: "long", day: "numeric" }
@@ -76,7 +63,6 @@ export default async function handler(req, res) {
       const unsubscribeLink = `${base}/unsubscribe?token=${r.updateToken}`;
       const updateLink = `${base}/update-hearing?token=${r.updateToken}`;
 
-      // build subject & body
       const subject =
         lang === "es"
           ? `Recordatorio: ${monthsLeft} mes(es) hasta su audiencia`
@@ -104,16 +90,14 @@ Unsubscribe: ${unsubscribeLink}
 
 — Immigration Court Reminder Tool`;
 
-      // send & update
       const { error } = await resend.emails.send({
-        to: email,
+        to: r.email,
         from: process.env.RESEND_FROM,
         subject,
-        text: emailText,
-        html: emailHtml,
+        text,
       });
       if (error) throw error;
-      
+
       console.log(`✅ Sent ${monthsLeft}‑mo (${lang}) to`, r.email);
 
       await Reminder.updateOne(
@@ -124,7 +108,6 @@ Unsubscribe: ${unsubscribeLink}
       monthlyCount++;
     }
 
-    // ─── 7‑day countdown reminders ────────────────────────────────────
     for (const r of countdownReminders) {
       const hearing = new Date(r.hearingDate);
       hearing.setHours(0, 0, 0, 0);
@@ -132,9 +115,7 @@ Unsubscribe: ${unsubscribeLink}
       const diffMs = hearing.getTime() - today.getTime();
       const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
-      // determine language
       const lang = (r.language && r.language.toLowerCase() === "es") ? "es" : "en";
-
       const formattedDate = hearing.toLocaleDateString(
         lang === "es" ? "es-ES" : "en-US",
         { year: "numeric", month: "long", day: "numeric" }
@@ -170,18 +151,16 @@ Unsubscribe: ${unsubscribeLink}
 
 — Immigration Court Reminder Tool`;
 
-const { error } = await resend.emails.send({
-  to: email,
-  from: process.env.RESEND_FROM,
-  subject,
-  text: emailText,
-  html: emailHtml,
-});
-if (error) throw error;
+      const { error } = await resend.emails.send({
+        to: r.email,
+        from: process.env.RESEND_FROM,
+        subject,
+        text,
+      });
+      if (error) throw error;
 
       console.log(`✅ Sent ${daysLeft}‑day (${lang}) to`, r.email);
 
-      // mark final day so we don’t re‑send next run
       if (daysLeft === 1) {
         await Reminder.updateOne(
           { _id: r._id },
@@ -192,9 +171,9 @@ if (error) throw error;
       countdownCount++;
     }
 
-    return res
-      .status(200)
-      .json({ message: `Sent ${monthlyCount} monthly and ${countdownCount} countdown reminders.` });
+    return res.status(200).json({
+      message: `Sent ${monthlyCount} monthly and ${countdownCount} countdown reminders.`,
+    });
   } catch (error) {
     console.error("❌ send7dayCountdownReminder error:", error);
     return res.status(500).json({ message: "Error sending reminders", error: error.message });
