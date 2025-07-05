@@ -70,7 +70,7 @@ Need to update your hearing date? Please unsubscribe and submit a new form here:
 
     const { error } = await resend.emails.send({
       to: email,
-      from: 'Immigration Court Reminders <onboarding@resend.dev>',      
+      from: process.env.RESEND_FROM,      
       subject,
       text,
     });
